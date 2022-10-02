@@ -1,0 +1,8 @@
+node_modules/
+.idea/
+*.iml
+
+dist/
+.parcel-cache/
+
+package-lock.json

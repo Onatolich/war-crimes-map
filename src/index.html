@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Crime topography</title>
+    <link rel="stylesheet" href="./static/styles.scss" />
+  </head>
+  <body>
+    <div id="root">
+      <h1>Crime topography</h1>
+      <main>
+        <aside id="summary"></aside>
+        <section class="mapContainer">
+          <div id="map">
+            <object data="./static/ukraineMap.svg"></object>
+          </div>
+        </section>
+      </main>
+      <section id="timeline">
+        <button class="playbackControl"></button>
+        <span class="slider">
+          <span class="date"></span>
+        </span>
+      </section>
+    </div>
+
+    <script src="./index.js" type="module"></script>
+  </body>
+</html>
