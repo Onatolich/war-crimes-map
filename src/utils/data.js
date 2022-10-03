@@ -1,5 +1,13 @@
 import { DAY_MS } from '../constants';
 
+const EMPTY_DIVISION = {
+  date: Date.now(),
+  events: [],
+  affectedNumberByType: {},
+  totalAffectedNumber: 0,
+  relativeSize: 0,
+};
+
 /**
  * Filter out incomplete events, re-aggregate the rest and sort them by date.
  */
@@ -17,17 +25,37 @@ function aggregateEvents(events) {
 }
 
 /**
- * This method will aggregate all the events into divisions where each division will contain info
- * about all the events that happened during the division period and aggregated number of affected people by type.
+ * Provision relative size for each division in the provided list to the highest affected number per division recorded.
+ * This is going to be used to determine division's bar size on the timeline.
+ */
+function provisionRelativeSize(divisions) {
+  const highestAffectedNumber = Math.max(...divisions.map(({ totalAffectedNumber }) => totalAffectedNumber));
+  return divisions.map((division) => ({
+    ...division,
+    relativeSize: division.totalAffectedNumber / highestAffectedNumber,
+  }));
+}
+
+/**
+ * Calculates the minimum full number of days per division to fit all events within the provided amount of divisions.
+ */
+function getDaysPerDivision(aggregatedEvents, divisionsNumber) {
+  const firstEventDate = aggregatedEvents[0].date;
+  const lastEventDate = aggregatedEvents[aggregatedEvents.length - 1].date;
+
+  const totalDays = (lastEventDate - firstEventDate) / DAY_MS;
+  return Math.ceil(totalDays / divisionsNumber);
+}
+
+/**
+ * Aggregates all the events into divisions where each division will contain info about all the events that happened
+ * during that division's time period and aggregated number of affected people by type.
  */
 export function getDivisionsFromEvents(events, divisionsNumber) {
   const aggregatedEvents = aggregateEvents(events);
 
   const firstEventDate = aggregatedEvents[0].date;
-  const lastEventDate = aggregatedEvents[aggregatedEvents.length - 1].date;
-
-  const totalDays = (lastEventDate - firstEventDate) / DAY_MS;
-  const daysPerDivision = Math.ceil(totalDays / divisionsNumber);
+  const daysPerDivision = getDaysPerDivision(aggregatedEvents, divisionsNumber);
   const msPerDivision = daysPerDivision * DAY_MS;
 
   const eventsByDate = aggregatedEvents.reduce((result, event) => ({
@@ -38,18 +66,13 @@ export function getDivisionsFromEvents(events, divisionsNumber) {
     ],
   }), []);
 
-  let highestAffectedNumber = 0;
   const cumulativeAffectedNumberByType = {};
 
   // Create requested divisions number and fill them with events and aggregated stats for respective time periods.
-  const divisions = [];
-  for (let i = 0; i < divisionsNumber; i++) {
+  const divisions = Array(divisionsNumber).fill('').map((_, i) => {
     const division = {
-      date: firstEventDate + i * msPerDivision,
-      events: [],
-      affectedNumberByType: {},
-      totalAffectedNumber: 0,
-      relativeSize: 0,
+      ...EMPTY_DIVISION,
+      date: firstEventDate + (i * msPerDivision),
     };
 
     // A list of all date timestamps within the current division period for quick access of events.
@@ -70,16 +93,9 @@ export function getDivisionsFromEvents(events, divisionsNumber) {
 
     division.cumulativeAffectedNumberByType = { ...cumulativeAffectedNumberByType };
     division.totalAffectedNumber = Object.values(division.affectedNumberByType).reduce((a, v) => a + v, 0);
-    highestAffectedNumber = Math.max(division.totalAffectedNumber, highestAffectedNumber);
 
-    divisions.push(division);
-  }
-  console.log(divisions);
+    return division;
+  });
 
-  // Additionally calculate relative size for each division to the highest affected number per division recorded.
-  // This is going to be used to determine division's bar size on the timeline.
-  return divisions.map((division) => ({
-    ...division,
-    relativeSize: division.totalAffectedNumber / highestAffectedNumber,
-  }));
+  return provisionRelativeSize(divisions);
 }

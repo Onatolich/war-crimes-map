@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "start": "parcel",
+    "start": "parcel --dist-dir ./public",
     "prebuild": "rm -rf ./public",
     "build": "parcel build --no-source-maps"
   },

@@ -5,7 +5,6 @@ import {
 
 export default class Map {
   $root = document.getElementById('map');
-  currentIndex = -1;
 
   constructor(divisions) {
     this.renderPoints(divisions);
@@ -13,25 +12,11 @@ export default class Map {
 
   /**
    * Sets the current division index and shows/hides corresponding division.
-   *
-   * It takes all divisions between the current and the new indices and either make them visible or invisible
-   * depending on the direction of change. This way we avoid unnecessary DOM manipulations as much as possible.
    */
   setDivisionIndex(index) {
-    const isForward = index > this.currentIndex;
-    const start = Math.min(index, this.currentIndex) + 1;
-    const end = Math.max(index, this.currentIndex);
-
-    for (let i = start; i <= end; i++) {
-      const $division = this.$divisions[i];
-      if (isForward) {
-        $division.classList.add('active');
-        continue;
-      }
-      $division.classList.remove('active');
-    }
-
-    this.currentIndex = index;
+    this.$divisions.forEach(($division, i) => {
+      $division.classList.toggle('active', index >= i)
+    });
   }
 
   /**
