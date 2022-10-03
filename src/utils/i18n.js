@@ -1,12 +1,12 @@
 import labelsByLang from '../data/names.json';
 
-/**
- * Number and date formatting will happen according to the user's locale while labels translation will be either
- * by user's language or, if not present, will default to English.
- */
 const locale = navigator.language || 'en-US';
-const labels = labelsByLang[locale.split('-').unshift()] || labelsByLang['en'];
 
+// Labels translation will depend on user's language with fallback to English if there is no support for it.
+const [langCode] = locale.split('-');
+const labels = labelsByLang[langCode] || labelsByLang['en'];
+
+// Number and date formatting will depend solely on user's geo locale irrespective to an actual language picked above.
 export const formatDate = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format;
 export const formatNumber = new Intl.NumberFormat(locale).format;
 

@@ -1,0 +1,8 @@
+## Highlights
+
+- Rendered as HTML and optimized for maximum runtime performance. Interactions should feel smooth even while dragging timeline slider fast;
+- Responsive design with CSS only. All positioning (dots, slider etc.) is percentage relative
+- Entire timeline is clickable and draggable (not just slider);
+- Data source agnostic. Right now it accepts events from static json file as a parameter but can be easily changed to any other source;
+- [Left], [Right], [End], [Home] - navigate timeline, [Space] - play/pause;
+- Internationalization for date/time and number formatting;

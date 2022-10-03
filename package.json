@@ -1,9 +1,17 @@
 {
-  "name": "crimemap",
+  "name": "crime-map",
   "version": "1.0.0",
-  "main": "index.js",
+  "targets": {
+    "crimeMap": {
+      "source": "./src/index.html",
+      "distDir": "./public",
+      "publicUrl": "."
+    }
+  },
   "scripts": {
-    "start": "parcel ./src/index.html"
+    "start": "parcel",
+    "prebuild": "rm -rf ./public",
+    "build": "parcel build --no-source-maps"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.7.0",

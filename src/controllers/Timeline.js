@@ -1,6 +1,13 @@
 import { formatDate } from '../utils/i18n';
 
 export default class Timeline {
+  static PLAYBACK_SPEED = 1000;
+
+  $root = document.getElementById('timeline');
+  $playbackControl = this.$root.querySelector('.playbackControl');
+  $slider = this.$root.querySelector('.slider');
+  $dateIndicator = this.$slider.querySelector('.date');
+
   _currentDivision = 0;
   isPlaying = false;
 
@@ -18,39 +25,37 @@ export default class Timeline {
     this.onCurrentChange(this._currentDivision);
 
     const $division = this.$divisions[this._currentDivision];
-    const divisionBarCenterX = $division.offsetLeft + $division.clientWidth / 2;
-    this.$slider.style.left = `${divisionBarCenterX}px`;
+    this.$slider.style.left = `${this._currentDivision}%`;
 
     this.$dateIndicator.innerText = formatDate($division.dataset.date);
   }
 
   constructor(divisions, onCurrentChange) {
     this.onCurrentChange = onCurrentChange;
-    this.$root = document.getElementById('timeline');
-    this.$slider = this.$root.querySelector('.slider');
-    this.$dateIndicator = this.$slider.querySelector('.date');
-    this.$playbackControl = this.$root.querySelector('.playbackControl');
 
     this.renderDivisions(divisions);
     this.totalDivisions = divisions.length;
     this.currentDivision = this.totalDivisions - 1;
 
-    /**
-     * We are binding on timeline itself instead of slider for slider events to allow the user to click not only on
-     * the slider but also on timeline bars and move mouse to navigate the timeline.
-     */
+    // We are binding on timeline itself instead of slider for slider events to allow the user to click not only on
+    // the slider but also on timeline bars and move mouse to navigate the timeline.
     this.$root.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
 
-    /**
-     * Playback control binding.
-     */
+    // Playback control binding.
     this.$playbackControl.addEventListener('mousedown', this.handlePlaybackControlMouseDown.bind(this));
     this.$playbackControl.addEventListener('click', this.handlePlaybackControlClick.bind(this));
+
+    // Keyboard controls binding.
+    window.addEventListener('keydown', this.handleKeyDown.bind(this));
   }
 
   handleMouseDown(e) {
+    if (e.button !== 0) {
+      return;
+    }
+
     e.preventDefault();
 
     this.pause();
@@ -80,15 +85,44 @@ export default class Timeline {
     e.preventDefault();
     e.stopPropagation();
 
-    if (this.isPlaying) {
-      this.pause();
-      return;
-    }
-    this.play();
+    this.togglePlayback();
   }
 
   handlePlaybackControlMouseDown(e) {
     e.stopPropagation();
+  }
+
+  handleKeyDown(e) {
+    switch (e.key) {
+      case 'ArrowLeft':
+        this.pause();
+        this.currentDivision -= 1;
+        break;
+
+      case 'ArrowRight':
+        this.pause();
+        this.currentDivision += 1;
+        break;
+
+      case ' ':
+        this.togglePlayback();
+        break;
+
+      case 'Home':
+        this.pause();
+        this.currentDivision = 0;
+        break;
+
+      case 'End':
+        this.pause();
+        this.currentDivision = this.totalDivisions - 1;
+        break;
+
+      default:
+        return;
+    }
+
+    e.preventDefault();
   }
 
   play() {
@@ -108,6 +142,17 @@ export default class Timeline {
     clearTimeout(this.playbackTimeout);
   }
 
+  togglePlayback() {
+    if (this.isPlaying) {
+      this.pause();
+      return;
+    }
+    this.play();
+  }
+
+  /**
+   * Schedules and performs playback move to the next division.
+   */
   scheduleNextDivisionMove() {
     if (this.currentDivision === this.totalDivisions - 1) {
       this.pause();
@@ -116,11 +161,11 @@ export default class Timeline {
     this.playbackTimeout = setTimeout(() => {
       this.currentDivision += 1;
       this.scheduleNextDivisionMove();
-    }, 1000);
+    }, Timeline.PLAYBACK_SPEED);
   }
 
   /**
-   * Makes the division closest to passed x coordinate active.
+   * Makes the division closest to passed x coordinate (relative to window) active.
    */
   activateDivisionAtX(x) {
     if (!this.slidingInfo) {
@@ -130,6 +175,12 @@ export default class Timeline {
     this.currentDivision = Math.floor((x - this.slidingInfo.rootX) / this.slidingInfo.stepSize);
   }
 
+  /**
+   * Renders division bars on the timeline plane.
+   *
+   * Instead of setting height for a bar it is setting its top padding which is pushing the nested ::after element.
+   * This allows to have a bigger interactive area without a need to render an actual DOM element for bar visuals.
+   */
   renderDivisions(divisions) {
     const rootHeight = this.$root.clientHeight;
 
