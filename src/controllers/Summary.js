@@ -14,7 +14,7 @@ export default class Summary {
   /**
    * Applies passed stats info to respective stat blocks.
    */
-  applyStats(stats) {
+  applyStats(stats = {}) {
     this.$statBlocks.forEach(($block) => {
       const type = $block.dataset.type;
       $block.querySelector('.value').innerText = formatNumber(stats[type] || 0);

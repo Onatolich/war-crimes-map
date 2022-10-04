@@ -25,26 +25,44 @@ function aggregateEvents(events) {
 }
 
 /**
+ * Calculates timespan of each division. The result is intentionally not an exact number of days to prevent having
+ * many empty divisions on timeline edges.
+ */
+function getDivisionTimespan(aggregatedEvents, divisionsNumber) {
+  const firstEventDate = aggregatedEvents[0].date;
+  const lastEventDate = aggregatedEvents[aggregatedEvents.length - 1].date;
+
+  const totalDays = (lastEventDate - firstEventDate) / DAY_MS;
+  return (totalDays / divisionsNumber) * DAY_MS;
+}
+
+/**
+ * Returns dates within the requested timespan picked from list of dates with events.
+ */
+function getDivisionDates(startDate, timeSpan, datesWithEvents) {
+  return datesWithEvents.filter((date) => (
+    date >= startDate && date < (startDate + timeSpan)
+  ));
+}
+
+/**
  * Provision relative size for each division in the provided list to the highest affected number per division recorded.
  * This is going to be used to determine division's bar size on the timeline.
  */
 function provisionRelativeSize(divisions) {
   const highestAffectedNumber = Math.max(...divisions.map(({ totalAffectedNumber }) => totalAffectedNumber));
-  return divisions.map((division) => ({
-    ...division,
-    relativeSize: division.totalAffectedNumber / highestAffectedNumber,
-  }));
-}
+  return divisions.map((division) => {
+    let relativeSize = division.totalAffectedNumber / highestAffectedNumber;
+    if (division.totalAffectedNumber) {
+      // If there are affected people within the division, ensure that it is not rendered as a zero-height bar.
+      relativeSize = Math.max(relativeSize, 0.05);
+    }
 
-/**
- * Calculates the minimum full number of days per division to fit all events within the provided amount of divisions.
- */
-function getDaysPerDivision(aggregatedEvents, divisionsNumber) {
-  const firstEventDate = aggregatedEvents[0].date;
-  const lastEventDate = aggregatedEvents[aggregatedEvents.length - 1].date;
-
-  const totalDays = (lastEventDate - firstEventDate) / DAY_MS;
-  return Math.ceil(totalDays / divisionsNumber);
+    return {
+      ...division,
+      relativeSize,
+    };
+  });
 }
 
 /**
@@ -52,11 +70,13 @@ function getDaysPerDivision(aggregatedEvents, divisionsNumber) {
  * during that division's time period and aggregated number of affected people by type.
  */
 export function getDivisionsFromEvents(events, divisionsNumber) {
+  // The first division must always be empty according to the task:
+  // > the appearance of points on the map is animated from: no point to showing all points
+  const trueDivisionsNumber = divisionsNumber - 1;
   const aggregatedEvents = aggregateEvents(events);
 
   const firstEventDate = aggregatedEvents[0].date;
-  const daysPerDivision = getDaysPerDivision(aggregatedEvents, divisionsNumber);
-  const msPerDivision = daysPerDivision * DAY_MS;
+  const divisionTimespan = getDivisionTimespan(aggregatedEvents, trueDivisionsNumber);
 
   const eventsByDate = aggregatedEvents.reduce((result, event) => ({
     ...result,
@@ -65,18 +85,19 @@ export function getDivisionsFromEvents(events, divisionsNumber) {
       event,
     ],
   }), []);
+  const datesWithEvents = Object.keys(eventsByDate);
 
   const cumulativeAffectedNumberByType = {};
 
   // Create requested divisions number and fill them with events and aggregated stats for respective time periods.
-  const divisions = Array(divisionsNumber).fill('').map((_, i) => {
+  const divisions = Array(trueDivisionsNumber).fill('').map((_, i) => {
     const division = {
       ...EMPTY_DIVISION,
-      date: firstEventDate + (i * msPerDivision),
+      date: firstEventDate + (i * divisionTimespan),
     };
 
     // A list of all date timestamps within the current division period for quick access of events.
-    const divisionDates = Array(daysPerDivision).fill('').map((_, j) => division.date + j * DAY_MS);
+    const divisionDates = getDivisionDates(division.date, divisionTimespan, datesWithEvents);
     division.events = divisionDates.reduce((a, date) => a.concat(...(eventsByDate[date] || [])), []);
 
     // Aggregate current division's level stats (not cumulative).
@@ -97,5 +118,10 @@ export function getDivisionsFromEvents(events, divisionsNumber) {
     return division;
   });
 
-  return provisionRelativeSize(divisions);
+  const firstDivision = {
+    ...EMPTY_DIVISION,
+    date: firstEventDate - divisionTimespan,
+  };
+
+  return provisionRelativeSize([firstDivision, ...divisions]);
 }

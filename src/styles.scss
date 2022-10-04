@@ -41,6 +41,7 @@ h1 {
 
       object {
         width: 100%;
+        pointer-events: none;
       }
     }
   }
@@ -107,49 +108,14 @@ h1 {
       background: #292929;
     }
 
-    &:hover {
+    &:hover,
+    &.isHighlighted {
       background: #292929;
 
       &::after {
         background: #585858;
       }
     }
-  }
-
-  .playbackControl {
-    position: absolute;
-    bottom: 100%;
-    right: 0;
-    width: 40px;
-    height: 40px;
-    margin-bottom: 25px;
-    background: url('./static/play.svg') 55% no-repeat;
-    border: 1px solid #fff;
-    cursor: pointer;
-    transition: box-shadow 0.2s;
-
-    &.isPlaying {
-      background: url('./static/pause.svg') center no-repeat;
-
-      & + .slider {
-        transition: left 0.2s ease-in-out;
-      }
-    }
-
-    &:hover {
-      box-shadow: inset 0 0 20px 0 #fff;
-    }
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: -3px;
-    top: 100%;
-    width: 100%;
-    height: 2px;
-    padding: 0 6px;
-    background: #292929;
   }
 
   .slider {
@@ -196,6 +162,38 @@ h1 {
         border-right: 4px solid transparent;
       }
     }
+  }
+
+  .playbackControl {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 25px;
+    background: url('./static/play.svg') 55% no-repeat;
+    border: 1px solid #fff;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: inset 0 0 20px 0 #fff;
+    }
+
+    &.isPlaying {
+      background: url('./static/pause.svg') center no-repeat;
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: -3px;
+    top: 100%;
+    width: 100%;
+    height: 2px;
+    padding: 0 6px;
+    background: #292929;
   }
 }
 

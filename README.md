@@ -6,3 +6,25 @@
 - Data source agnostic. Right now it accepts events from static json file as a parameter but can be easily changed to any other source;
 - [Left], [Right], [End], [Home] - navigate timeline, [Space] - play/pause;
 - Internationalization for date/time and number formatting;
+
+## Dev env setup
+
+Install dependencies
+```bash
+$ npm install
+```
+
+Start local dev server
+```bash
+$ npm start
+```
+
+Build for production
+```bash
+$ npm run build
+```
+
+Run dev server from production build
+```bash
+$ npx http-server
+```
