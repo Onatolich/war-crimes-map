@@ -1,3 +1,7 @@
+## War crime map
+
+Visualization of Russian war crimes in Ukraine over time.
+
 ## Highlights
 
 - Rendered as HTML and optimized for maximum runtime performance. Interactions should feel smooth even while dragging timeline slider fast;
