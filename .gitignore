@@ -3,6 +3,7 @@ node_modules/
 *.iml
 
 dist/
+public/
 .parcel-cache/
 
 package-lock.json

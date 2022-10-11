@@ -10,8 +10,9 @@
   },
   "scripts": {
     "start": "parcel",
-    "prebuild": "rm -rf ./public",
-    "build": "parcel build --no-source-maps"
+    "prebuild": "rm -rf ./public && rm -rf ./docs",
+    "build": "parcel build --no-source-maps",
+    "postbuild": "cp -r ./public ./docs"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.7.0",
